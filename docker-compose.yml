@@ -1,0 +1,53 @@
+version: '3'
+
+services:
+  grafana:
+    container_name: grafana
+    image: grafana/grafana:main
+    volumes:
+      - grafana-storage:/var/lib/grafana
+      - $PWD/grafana/grafana.ini:/etc/grafana/grafana.ini
+      # - $PWD/grafana/provisioning:/etc/grafana/provisioning
+    expose:
+      - 3000
+    environment:
+      - VIRTUAL_HOST=grafana.l1zz.ru
+      - VIRTUAL_PORT=3000
+      - LETSENCRYPT_HOST=grafana.l1zz.ru
+    depends_on:
+      - telegraf
+    networks:
+      - host_env
+
+  telegraf:
+    container_name: telergaf
+    image: telegraf:latest
+    volumes:
+      - $PWD/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+    depends_on:
+      - influx
+    networks:
+      - host_env
+
+  influx:
+    container_name: influx
+    image: influxdb:1.8.10
+    volumes:
+      - influxdb-storage:/var/lib/influx
+      - $PWD/influxdb.conf:/etc/influxdb/influxdb.conf
+    expose:
+      - 8086
+    environment:
+      INFLUXDB_DB:            influx
+      INFLUXDB_USER:          influx 
+      INFLUXDB_USER_PASSWORD: 12345
+    networks:
+      - host_env
+
+volumes:
+  grafana-storage:
+  influxdb-storage:
+
+networks:
+  host_env:
+    external: true
